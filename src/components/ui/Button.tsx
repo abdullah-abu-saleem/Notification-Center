@@ -4,6 +4,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
+  loading?: boolean;
 }
 
 const baseStyles = 'relative rounded-2xl font-bold transition-all duration-200 transform active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 outline-none focus-visible:ring-4 focus-visible:ring-blue-200';
@@ -22,18 +23,26 @@ const sizes: Record<string, string> = {
   lg: 'px-8 py-4 text-lg',
 };
 
+const Spinner: React.FC = () => (
+  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin opacity-70" />
+);
+
 export const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',
   size = 'md',
   fullWidth = false,
+  loading = false,
   className = '',
+  disabled,
   ...props
 }) => (
   <button
     className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+    disabled={disabled || loading}
     {...props}
   >
+    {loading && <Spinner />}
     {children}
   </button>
 );

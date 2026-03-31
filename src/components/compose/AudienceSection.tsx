@@ -1,20 +1,23 @@
 import React, { useMemo } from 'react';
 import { GraduationCap, BookOpen, Users, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { ComposeFormState, ComposeAction, AudienceRole } from '@/types/notification';
 import { ALL_GRADES, ALL_CLASSES } from '@/types/notification';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   form: ComposeFormState;
   dispatch: React.Dispatch<ComposeAction>;
 }
 
-const ROLE_OPTIONS: { role: AudienceRole; label: string; icon: React.FC<{ className?: string }>; baseCount: number }[] = [
-  { role: 'student', label: 'Students', icon: GraduationCap, baseCount: 960 },
-  { role: 'teacher', label: 'Teachers', icon: BookOpen, baseCount: 40 },
-  { role: 'parent', label: 'Parents', icon: Users, baseCount: 800 },
-];
-
 export const AudienceSection: React.FC<Props> = ({ form, dispatch }) => {
+  const { t, locale } = useLanguage();
+
+  const ROLE_OPTIONS = [
+    { role: 'student' as AudienceRole, label: t('audience.students'), icon: GraduationCap, baseCount: 960 },
+    { role: 'teacher' as AudienceRole, label: t('audience.teachers'), icon: BookOpen, baseCount: 40 },
+    { role: 'parent' as AudienceRole, label: t('audience.parents'), icon: Users, baseCount: 800 },
+  ];
   const { audience } = form;
 
   const toggleRole = (role: AudienceRole) => {
@@ -69,34 +72,38 @@ export const AudienceSection: React.FC<Props> = ({ form, dispatch }) => {
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-bold text-slate-800">Audience Targeting</h3>
-        <p className="text-sm text-slate-500 mt-1">Choose who should receive this notification.</p>
+        <h3 className="text-lg font-bold text-slate-800">{t('audience.heading')}</h3>
+        <p className="text-sm text-slate-500 mt-1">{t('audience.subtitle')}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Recipients by Role</label>
+        <label className="block text-sm font-bold text-slate-700 mb-2">{t('audience.roleLabel')}</label>
         <div className="grid grid-cols-3 gap-3">
           {ROLE_OPTIONS.map(opt => {
             const selected = audience.roles.includes(opt.role);
             return (
-              <button
+              <motion.button
                 key={opt.role}
                 onClick={() => toggleRole(opt.role)}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
                 className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                   selected
-                    ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                    ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-sm shadow-indigo-100'
                     : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
                 }`}
               >
                 {selected && (
-                  <div className="absolute top-2 right-2 bg-indigo-500 rounded-full p-0.5">
+                  <div className="absolute top-2 right-2 rtl:left-2 rtl:right-auto bg-indigo-500 rounded-full p-0.5">
                     <Check className="w-3 h-3 text-white" />
                   </div>
                 )}
-                <opt.icon className="w-6 h-6" />
+                <div className={`rounded-xl p-2 ${selected ? 'bg-indigo-100' : 'bg-slate-50'}`}>
+                  <opt.icon className="w-6 h-6" />
+                </div>
                 <span className="text-sm font-bold">{opt.label}</span>
-                <span className="text-[10px] font-medium text-slate-400">{opt.baseCount.toLocaleString()} total</span>
-              </button>
+                <span className="text-[10px] font-medium text-slate-400">{opt.baseCount.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} {t('audience.total')}</span>
+              </motion.button>
             );
           })}
         </div>
@@ -106,36 +113,62 @@ export const AudienceSection: React.FC<Props> = ({ form, dispatch }) => {
         <>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-bold text-slate-700">Filter by Grade</label>
+              <label className="text-sm font-bold text-slate-700">{t('audience.filterGrade')}</label>
               <button onClick={selectAllGrades} className="text-xs font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
-                {audience.grades.length === ALL_GRADES.length ? 'Deselect All' : 'Select All'}
+                {audience.grades.length === ALL_GRADES.length ? t('audience.deselectAll') : t('audience.selectAll')}
               </button>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {ALL_GRADES.map(g => {
-                const selected = audience.grades.includes(g);
-                return (
-                  <button
-                    key={g}
-                    onClick={() => toggleGrade(g)}
-                    className={`w-10 h-10 rounded-xl border-2 text-sm font-bold transition-all ${
-                      selected
-                        ? 'bg-slate-800 border-slate-800 text-white'
-                        : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
-                    }`}
-                  >
-                    {g}
-                  </button>
-                );
-              })}
+            <div className="space-y-2">
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Primary (1–6)</p>
+                <div className="flex flex-wrap gap-2">
+                  {ALL_GRADES.slice(0, 6).map(g => {
+                    const selected = audience.grades.includes(g);
+                    return (
+                      <button
+                        key={g}
+                        onClick={() => toggleGrade(g)}
+                        className={`w-10 h-10 rounded-xl border-2 text-sm font-bold transition-all ${
+                          selected
+                            ? 'bg-slate-800 border-slate-800 text-white'
+                            : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Secondary (7–12)</p>
+                <div className="flex flex-wrap gap-2">
+                  {ALL_GRADES.slice(6).map(g => {
+                    const selected = audience.grades.includes(g);
+                    return (
+                      <button
+                        key={g}
+                        onClick={() => toggleGrade(g)}
+                        className={`w-10 h-10 rounded-xl border-2 text-sm font-bold transition-all ${
+                          selected
+                            ? 'bg-slate-800 border-slate-800 text-white'
+                            : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <p className="text-xs text-slate-400 mt-1.5">
-              {audience.grades.length === 0 ? 'No filter — all grades included' : `${audience.grades.length} grade(s) selected`}
+              {audience.grades.length === 0 ? t('audience.noGradeFilter') : t('audience.gradesSelected').replace('{count}', String(audience.grades.length))}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Filter by Class Section</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">{t('audience.filterClass')}</label>
             <div className="flex gap-2">
               {ALL_CLASSES.map(c => {
                 const selected = audience.classes.includes(c);
@@ -155,7 +188,7 @@ export const AudienceSection: React.FC<Props> = ({ form, dispatch }) => {
               })}
             </div>
             <p className="text-xs text-slate-400 mt-1.5">
-              {audience.classes.length === 0 ? 'No filter — all sections included' : `Section(s) ${audience.classes.join(', ')} selected`}
+              {audience.classes.length === 0 ? t('audience.noClassFilter') : t('audience.classesSelected').replace('{classes}', audience.classes.join(', '))}
             </p>
           </div>
         </>
@@ -167,9 +200,9 @@ export const AudienceSection: React.FC<Props> = ({ form, dispatch }) => {
             <Users className="w-5 h-5 text-indigo-600" />
           </div>
           <div>
-            <p className="text-xs font-bold text-indigo-500 uppercase tracking-wide">Estimated Audience</p>
+            <p className="text-xs font-bold text-indigo-500 uppercase tracking-wide">{t('audience.estimatedAudience')}</p>
             <p className="text-2xl font-bold text-slate-800">
-              {estimatedCount > 0 ? `~${estimatedCount.toLocaleString()} recipients` : 'Select at least one role'}
+              {estimatedCount > 0 ? t('audience.recipientsCount').replace('{count}', estimatedCount.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')) : t('audience.selectRole')}
             </p>
           </div>
         </div>

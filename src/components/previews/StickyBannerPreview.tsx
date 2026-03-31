@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import type { BannerConfig } from '@/types/notification';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   config: BannerConfig;
@@ -25,6 +26,7 @@ const TEXT_COLOR_MAP: Record<string, string> = {
 };
 
 export const StickyBannerPreview: React.FC<Props> = ({ config }) => {
+  const { t } = useLanguage();
   const bgClass = COLOR_MAP[config.colorTheme] || 'bg-[#1CB0F6]';
   const textClass = TEXT_COLOR_MAP[config.colorTheme] || 'text-white';
 
@@ -36,14 +38,14 @@ export const StickyBannerPreview: React.FC<Props> = ({ config }) => {
           <div className="w-2 h-2 rounded-full bg-amber-400" />
           <div className="w-2 h-2 rounded-full bg-emerald-400" />
           <div className="flex-1 mx-2 bg-white rounded-md px-2 py-0.5">
-            <p className="text-[9px] text-slate-400 text-center">app.example.com</p>
+            <p className="text-[9px] text-slate-400 text-center">{t('bannerPreview.addressBar')}</p>
           </div>
         </div>
 
         <div className="bg-white px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-md bg-slate-800" />
-            <span className="text-[10px] font-bold text-slate-700">Platform</span>
+            <span className="text-[10px] font-bold text-slate-700">{t('bannerPreview.platform')}</span>
           </div>
           <div className="flex gap-3">
             <div className="w-8 h-2 bg-slate-200 rounded" />
@@ -54,7 +56,7 @@ export const StickyBannerPreview: React.FC<Props> = ({ config }) => {
 
         <div className={`${bgClass} px-4 py-2.5 flex items-center justify-between gap-3`}>
           <p className={`text-xs font-bold ${textClass} flex-1`}>
-            {config.message || 'Banner message will appear here'}
+            {config.message || t('bannerPreview.bodyPlaceholder')}
           </p>
           <div className="flex items-center gap-2 shrink-0">
             {config.ctaLabel && (

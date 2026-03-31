@@ -1,10 +1,11 @@
 import React, { useReducer, useEffect, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, Send, Save } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Send, Save, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import type { ComposeFormState } from '@/types/notification';
 import { INITIAL_COMPOSE_STATE, composeReducer } from '@/types/notification';
 import { saveDraft, loadDraft, clearDraft } from '@/lib/storage';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { BasicInfoSection } from './BasicInfoSection';
 import { AudienceSection } from './AudienceSection';
 import { ChannelSection } from './ChannelSection';
@@ -19,16 +20,17 @@ interface Props {
   onSaveDraft: (form: ComposeFormState) => void;
 }
 
-const STEPS = [
-  { label: 'Basic Info', shortLabel: 'Info' },
-  { label: 'Audience', shortLabel: 'Audience' },
-  { label: 'Channels', shortLabel: 'Channels' },
-  { label: 'Schedule', shortLabel: 'Schedule' },
-  { label: 'Preview', shortLabel: 'Preview' },
-  { label: 'Review & Send', shortLabel: 'Review' },
-];
-
 export const ComposeDrawer: React.FC<Props> = ({ initialState, onClose, onPublish, onSaveDraft }) => {
+  const { t, dir } = useLanguage();
+
+  const STEPS = [
+    { label: t('compose.labelInfo'), shortLabel: t('compose.stepInfo') },
+    { label: t('compose.labelAudience'), shortLabel: t('compose.stepAudience') },
+    { label: t('compose.labelChannels'), shortLabel: t('compose.stepChannels') },
+    { label: t('compose.labelSchedule'), shortLabel: t('compose.stepSchedule') },
+    { label: t('compose.labelPreview'), shortLabel: t('compose.stepPreview') },
+    { label: t('compose.labelReview'), shortLabel: t('compose.stepReview') },
+  ];
   const [form, dispatch] = useReducer(composeReducer, null, () => {
     if (initialState) return initialState;
     try {
@@ -82,43 +84,57 @@ export const ComposeDrawer: React.FC<Props> = ({ initialState, onClose, onPublis
         />
 
         <motion.div
-          initial={{ x: '100%' }}
+          initial={{ x: dir === 'rtl' ? '-100%' : '100%' }}
           animate={{ x: 0 }}
-          exit={{ x: '100%' }}
+          exit={{ x: dir === 'rtl' ? '-100%' : '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           className="relative w-full lg:w-[620px] bg-white shadow-2xl flex flex-col h-full"
         >
-          <div className="shrink-0 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="shrink-0 px-6 py-4 bg-gradient-to-b from-white to-slate-50/50 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-slate-800">Compose Notification</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Step {step + 1} of {STEPS.length} — {STEPS[step].label}</p>
+              <h2 className="text-lg font-bold text-slate-800">{t('compose.title')}</h2>
+              <p className="text-xs text-slate-400 mt-0.5">{t('compose.stepOf').replace('{step}', String(step + 1)).replace('{total}', String(STEPS.length))} — {STEPS[step].label}</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <div className="shrink-0 px-6 pt-4 pb-2">
-            <div className="flex gap-1.5">
+            <div className="flex items-start">
               {STEPS.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => setStep(i)}
-                  className="flex-1 group"
+                  className="flex-1 group relative"
                   title={s.label}
                 >
-                  <div
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i < step ? 'bg-[#58CC02]' :
-                      i === step ? 'bg-slate-800' :
-                      'bg-slate-200'
-                    }`}
-                  />
-                  <p className={`text-[10px] font-bold mt-1 transition-colors ${
-                    i === step ? 'text-slate-700' : 'text-slate-400'
+                  <div className="flex items-center">
+                    {i > 0 && (
+                      <div className={`flex-1 h-0.5 transition-all duration-500 ${
+                        i <= step ? 'bg-[#58CC02]' : 'bg-slate-200'
+                      }`} />
+                    )}
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 shrink-0 ${
+                      i < step
+                        ? 'bg-[#58CC02] text-white shadow-sm shadow-emerald-200'
+                        : i === step
+                        ? 'bg-slate-800 text-white shadow-sm shadow-slate-300'
+                        : 'bg-white border-2 border-slate-200 text-slate-400'
+                    }`}>
+                      {i < step ? <Check className="w-3 h-3" /> : i + 1}
+                    </div>
+                    {i < STEPS.length - 1 && (
+                      <div className={`flex-1 h-0.5 transition-all duration-500 ${
+                        i < step ? 'bg-[#58CC02]' : 'bg-slate-200'
+                      }`} />
+                    )}
+                  </div>
+                  <p className={`text-[10px] font-bold mt-1.5 text-center transition-colors ${
+                    i === step ? 'text-slate-700' : i < step ? 'text-emerald-600' : 'text-slate-400'
                   }`}>
                     {s.shortLabel}
                   </p>
@@ -131,9 +147,9 @@ export const ComposeDrawer: React.FC<Props> = ({ initialState, onClose, onPublis
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: dir === 'rtl' ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={{ opacity: 0, x: dir === 'rtl' ? 20 : -20 }}
                 transition={{ duration: 0.2 }}
               >
                 {renderStep()}
@@ -141,12 +157,12 @@ export const ComposeDrawer: React.FC<Props> = ({ initialState, onClose, onPublis
             </AnimatePresence>
           </div>
 
-          <div className="shrink-0 px-6 py-4 border-t border-slate-100 flex items-center justify-between gap-3">
+          <div className="shrink-0 px-6 py-4 border-t border-slate-100 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] flex items-center justify-between gap-3">
             <div>
               {step > 0 && (
                 <Button variant="ghost" size="sm" onClick={handleBack}>
                   <ChevronLeft className="w-4 h-4" />
-                  Back
+                  {t('actions.back')}
                 </Button>
               )}
             </div>
@@ -154,18 +170,18 @@ export const ComposeDrawer: React.FC<Props> = ({ initialState, onClose, onPublis
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={handleDraft}>
                 <Save className="w-4 h-4" />
-                Save Draft
+                {t('actions.saveDraft')}
               </Button>
 
               {step < 5 ? (
                 <Button variant="primary" size="sm" onClick={handleNext}>
-                  Next
+                  {t('actions.next')}
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               ) : (
                 <Button variant="primary" size="sm" onClick={handlePublish}>
                   <Send className="w-4 h-4" />
-                  {form.sendNow ? 'Send Now' : 'Schedule'}
+                  {form.sendNow ? t('actions.sendNow') : t('actions.schedule')}
                 </Button>
               )}
             </div>

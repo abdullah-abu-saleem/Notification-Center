@@ -2,16 +2,19 @@ import type { Notification, NotificationStats } from '@/types/notification';
 
 const STORAGE_KEY = 'nc-notifications';
 const DRAFT_KEY = 'nc-notification-draft';
+const DATA_LOCALE_KEY = 'nc-data-locale';
 
-export function loadNotifications(): Notification[] {
+export function loadNotifications(locale: 'en' | 'ar' = 'en'): Notification[] {
   try {
+    const storedLocale = localStorage.getItem(DATA_LOCALE_KEY);
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored && storedLocale === locale) return JSON.parse(stored);
   } catch (e) {
     console.warn('Failed to load notifications:', e);
   }
-  const seed = generateMockNotifications();
+  const seed = generateMockNotifications(locale);
   saveAllNotifications(seed);
+  try { localStorage.setItem(DATA_LOCALE_KEY, locale); } catch {}
   return seed;
 }
 
@@ -90,7 +93,12 @@ function daysFromNow(days: number): string {
   return d.toISOString();
 }
 
-function generateMockNotifications(): Notification[] {
+function generateMockNotifications(locale: 'en' | 'ar' = 'en'): Notification[] {
+  if (locale === 'ar') return generateArabicMocks();
+  return generateEnglishMocks();
+}
+
+function generateEnglishMocks(): Notification[] {
   return [
     {
       id: 'notif-mock-001',
@@ -267,6 +275,193 @@ function generateMockNotifications(): Notification[] {
       audience: { roles: ['student', 'teacher'], grades: [], classes: [], estimatedCount: 650 },
       channels: ['app-notification'],
       appNotifConfig: { title: 'New Books in the Library!', message: '15 new titles added this week. Come check them out!', actionLabel: 'Browse', actionUrl: '/library' },
+      sendNow: true,
+      scheduledAt: null,
+      sentAt: daysAgo(5),
+      expiresAt: daysFromNow(25),
+      createdAt: daysAgo(6),
+      stats: randomStats(650),
+    },
+  ];
+}
+
+function generateArabicMocks(): Notification[] {
+  return [
+    {
+      id: 'notif-mock-001',
+      title: 'جدول اختبارات نهاية الفصل',
+      campaignName: 'اختبارات الفصل الثاني 2026',
+      description: 'إبلاغ جميع الطلاب وأولياء الأمور بجدول الاختبارات النهائية ونصائح التحضير.',
+      priority: 'high',
+      status: 'sent',
+      audience: { roles: ['student', 'parent'], grades: ['7', '8', '9', '10', '11', '12'], classes: [], estimatedCount: 840 },
+      channels: ['email', 'app-notification', 'pop-up'],
+      emailConfig: { subject: 'جدول الاختبارات النهائية — الفصل الثاني', body: 'أعزاءنا الطلاب وأولياء الأمور،\n\nيسرنا إعلامكم بجدول الاختبارات النهائية للفصل الثاني. تبدأ الاختبارات في 15 أبريل. يرجى مراجعة إرشادات التحضير المرفقة.\n\nمع أطيب التحيات،\nمدارس الخضر الحديثة', imageUrl: '', ctaLabel: 'عرض الجدول', ctaUrl: '/announcements/exams' },
+      appNotifConfig: { title: 'تم نشر جدول الاختبارات', message: 'جدول اختبارات الفصل الثاني النهائية متاح الآن. اضغط للعرض.', actionLabel: 'عرض', actionUrl: '/announcements/exams' },
+      popUpConfig: { title: 'الاختبارات النهائية قريبًا', body: 'تم نشر جدول اختبارات الفصل الثاني. يرجى مراجعة المواعيد وإرشادات التحضير.', imageUrl: '', primaryLabel: 'عرض الجدول', primaryUrl: '/announcements/exams', dismissLabel: 'لاحقًا', priority: 2 },
+      sendNow: true,
+      scheduledAt: null,
+      sentAt: daysAgo(3),
+      expiresAt: daysFromNow(12),
+      createdAt: daysAgo(5),
+      stats: randomStats(840),
+    },
+    {
+      id: 'notif-mock-002',
+      title: 'اجتماع أولياء الأمور والمعلمين',
+      campaignName: 'اجتماع مارس 2026',
+      description: 'دعوة أولياء الأمور لحضور اجتماع أولياء الأمور والمعلمين مع تفاصيل الحجز.',
+      priority: 'normal',
+      status: 'sent',
+      audience: { roles: ['parent'], grades: ['1', '2', '3', '4', '5', '6'], classes: [], estimatedCount: 420 },
+      channels: ['email', 'sticky-banner'],
+      emailConfig: { subject: 'دعوة: اجتماع أولياء الأمور والمعلمين', body: 'أعزاءنا أولياء الأمور،\n\nيسرنا دعوتكم لحضور اجتماع أولياء الأمور والمعلمين في 30 مارس. يرجى حجز الموعد المناسب عبر الرابط أدناه.', imageUrl: '', ctaLabel: 'احجز موعدك', ctaUrl: '/ptc/booking' },
+      bannerConfig: { message: 'اجتماع أولياء الأمور والمعلمين: 30 مارس — احجز موعدك الآن!', ctaLabel: 'احجز الآن', ctaUrl: '/ptc/booking', dismissible: true, colorTheme: 'duo-blue' },
+      sendNow: true,
+      scheduledAt: null,
+      sentAt: daysAgo(7),
+      expiresAt: daysFromNow(2),
+      createdAt: daysAgo(10),
+      stats: randomStats(420),
+    },
+    {
+      id: 'notif-mock-003',
+      title: 'ميزات جديدة في منصة التعلم',
+      campaignName: 'تحديث المنصة v2.5',
+      description: 'الإعلان عن خريطة المهارات الجديدة ووضع التدريب لجميع المستخدمين.',
+      priority: 'low',
+      status: 'sent',
+      audience: { roles: ['student', 'teacher'], grades: [], classes: [], estimatedCount: 650 },
+      channels: ['app-notification', 'sticky-banner'],
+      appNotifConfig: { title: 'ميزات جديدة متاحة!', message: 'اكتشف خريطة المهارات الجديدة ووضع التدريب.', actionLabel: 'استكشف', actionUrl: '/skill-map' },
+      bannerConfig: { message: 'جديد! خريطة المهارات ووضع التدريب متاحان الآن.', ctaLabel: 'جرّب الآن', ctaUrl: '/skill-map', dismissible: true, colorTheme: 'duo-purple' },
+      sendNow: true,
+      scheduledAt: null,
+      sentAt: daysAgo(14),
+      expiresAt: daysAgo(1),
+      createdAt: daysAgo(15),
+      stats: randomStats(650),
+    },
+    {
+      id: 'notif-mock-004',
+      title: 'اليوم الرياضي للمدرسة',
+      campaignName: 'اليوم الرياضي 2026',
+      description: 'الإعلان عن اليوم الرياضي السنوي مع تفاصيل التسجيل.',
+      priority: 'normal',
+      status: 'scheduled',
+      audience: { roles: ['student', 'parent', 'teacher'], grades: [], classes: [], estimatedCount: 1200 },
+      channels: ['email', 'app-notification', 'pop-up'],
+      emailConfig: { subject: 'اليوم الرياضي السنوي — 20 أبريل', body: 'استعدوا لأكبر حدث رياضي في العام! سجّلوا أبناءكم في الفعاليات قبل 10 أبريل.', imageUrl: '', ctaLabel: 'سجّل الآن', ctaUrl: '/events/sports-day' },
+      appNotifConfig: { title: 'التسجيل في اليوم الرياضي مفتوح', message: 'سجّل في فعاليات اليوم الرياضي قبل 10 أبريل.', actionLabel: 'تسجيل', actionUrl: '/events/sports-day' },
+      popUpConfig: { title: 'اليوم الرياضي 2026!', body: 'اليوم الرياضي السنوي في 20 أبريل. ينتهي التسجيل في 10 أبريل.', imageUrl: '', primaryLabel: 'تسجيل', primaryUrl: '/events/sports-day', dismissLabel: 'ذكّرني لاحقًا', priority: 1 },
+      sendNow: false,
+      scheduledAt: daysFromNow(3),
+      sentAt: null,
+      expiresAt: daysFromNow(25),
+      createdAt: daysAgo(2),
+      stats: { delivered: 0, opened: 0, clicked: 0, dismissed: 0 },
+    },
+    {
+      id: 'notif-mock-005',
+      title: 'تغيير مواعيد رمضان',
+      campaignName: 'مواعيد رمضان 2026',
+      description: 'إبلاغ الجميع بتعديل مواعيد الدوام خلال شهر رمضان.',
+      priority: 'urgent',
+      status: 'sent',
+      audience: { roles: ['student', 'parent', 'teacher'], grades: [], classes: [], estimatedCount: 1200 },
+      channels: ['email', 'app-notification', 'sticky-banner', 'pop-up'],
+      emailConfig: { subject: 'تحديث مواعيد الدوام — رمضان', body: 'سيتم تعديل مواعيد الدوام خلال شهر رمضان المبارك. ستكون الحصص من الساعة 8:00 صباحًا حتى 1:00 ظهرًا اعتبارًا من 1 مارس.', imageUrl: '', ctaLabel: 'عرض الجدول الكامل', ctaUrl: '/schedule/ramadan' },
+      appNotifConfig: { title: 'مواعيد رمضان', message: 'مواعيد الدوام المعدّلة: 8 ص – 1 م خلال رمضان.', actionLabel: 'التفاصيل', actionUrl: '/schedule/ramadan' },
+      popUpConfig: { title: 'تحديث مواعيد رمضان', body: 'مواعيد الدوام ستكون من 8:00 صباحًا حتى 1:00 ظهرًا خلال رمضان، اعتبارًا من 1 مارس.', imageUrl: '', primaryLabel: 'عرض الجدول', primaryUrl: '/schedule/ramadan', dismissLabel: 'فهمت', priority: 3 },
+      bannerConfig: { message: 'مواعيد رمضان: 8 ص – 1 م اعتبارًا من 1 مارس', ctaLabel: 'التفاصيل', ctaUrl: '/schedule/ramadan', dismissible: false, colorTheme: 'duo-gold' },
+      sendNow: true,
+      scheduledAt: null,
+      sentAt: daysAgo(20),
+      expiresAt: daysFromNow(10),
+      createdAt: daysAgo(22),
+      stats: randomStats(1200),
+    },
+    {
+      id: 'notif-mock-006',
+      title: 'حفل تخرج الصف الثاني عشر',
+      campaignName: 'التخرج 2026',
+      description: 'تفاصيل حفل التخرج القادم لطلاب الصف الثاني عشر.',
+      priority: 'high',
+      status: 'scheduled',
+      audience: { roles: ['student', 'parent'], grades: ['12'], classes: [], estimatedCount: 120 },
+      channels: ['email', 'pop-up'],
+      emailConfig: { subject: 'حفل التخرج — 15 يونيو', body: 'يشرفنا دعوتكم لحضور حفل تخرج دفعة 2026. يرجى تأكيد الحضور قبل 1 يونيو.', imageUrl: '', ctaLabel: 'تأكيد الحضور', ctaUrl: '/events/graduation' },
+      popUpConfig: { title: 'حفل التخرج', body: 'أنتم مدعوون لحضور حفل تخرج دفعة 2026! 15 يونيو في القاعة الرئيسية.', imageUrl: '', primaryLabel: 'تأكيد', primaryUrl: '/events/graduation', dismissLabel: 'ربما لاحقًا', priority: 2 },
+      sendNow: false,
+      scheduledAt: daysFromNow(7),
+      sentAt: null,
+      expiresAt: daysFromNow(80),
+      createdAt: daysAgo(1),
+      stats: { delivered: 0, opened: 0, clicked: 0, dismissed: 0 },
+    },
+    {
+      id: 'notif-mock-007',
+      title: 'تحدي الرياضيات الأسبوعي',
+      campaignName: 'تحدي الرياضيات أ12',
+      description: 'مسودة إشعار تحدي الرياضيات الأسبوعي.',
+      priority: 'low',
+      status: 'draft',
+      audience: { roles: ['student'], grades: ['7', '8', '9'], classes: [], estimatedCount: 280 },
+      channels: ['app-notification'],
+      appNotifConfig: { title: 'تحدي الرياضيات الأسبوعي', message: 'تحدي هذا الأسبوع جاهز! هل تستطيع حله؟', actionLabel: 'العب', actionUrl: '/learn/math' },
+      sendNow: true,
+      scheduledAt: null,
+      sentAt: null,
+      expiresAt: null,
+      createdAt: daysAgo(0),
+      stats: { delivered: 0, opened: 0, clicked: 0, dismissed: 0 },
+    },
+    {
+      id: 'notif-mock-008',
+      title: 'إعلان الإجازة الصيفية',
+      campaignName: 'صيف 2025',
+      description: 'إعلان الإجازة الصيفية للعام الماضي — منتهي الصلاحية.',
+      priority: 'normal',
+      status: 'expired',
+      audience: { roles: ['student', 'parent', 'teacher'], grades: [], classes: [], estimatedCount: 1200 },
+      channels: ['email', 'sticky-banner'],
+      emailConfig: { subject: 'تبدأ الإجازة الصيفية في 20 يونيو', body: 'نتمنى للجميع إجازة صيفية سعيدة. نراكم في سبتمبر!', imageUrl: '', ctaLabel: '', ctaUrl: '' },
+      bannerConfig: { message: 'تبدأ الإجازة الصيفية في 20 يونيو. إجازة سعيدة!', ctaLabel: '', ctaUrl: '', dismissible: true, colorTheme: 'duo-green' },
+      sendNow: true,
+      scheduledAt: null,
+      sentAt: daysAgo(280),
+      expiresAt: daysAgo(200),
+      createdAt: daysAgo(285),
+      stats: randomStats(1200),
+    },
+    {
+      id: 'notif-mock-009',
+      title: 'يوم التطوير المهني للمعلمين',
+      campaignName: 'يوم التطوير - أبريل',
+      description: 'إبلاغ المعلمين بورشة التطوير المهني القادمة.',
+      priority: 'normal',
+      status: 'draft',
+      audience: { roles: ['teacher'], grades: [], classes: [], estimatedCount: 40 },
+      channels: ['email', 'app-notification'],
+      emailConfig: { subject: 'يوم التطوير المهني — 5 أبريل', body: 'يجب على جميع المعلمين حضور ورشة التطوير المهني في 5 أبريل. تشمل المواضيع التعليم المتمايز ودمج التكنولوجيا.', imageUrl: '', ctaLabel: 'عرض البرنامج', ctaUrl: '/pd/agenda' },
+      appNotifConfig: { title: 'تذكير يوم التطوير المهني', message: 'يوم التطوير المهني في 5 أبريل. راجع البرنامج.', actionLabel: 'عرض', actionUrl: '/pd/agenda' },
+      sendNow: false,
+      scheduledAt: '',
+      sentAt: null,
+      expiresAt: null,
+      createdAt: daysAgo(1),
+      stats: { delivered: 0, opened: 0, clicked: 0, dismissed: 0 },
+    },
+    {
+      id: 'notif-mock-010',
+      title: 'وصول كتب جديدة للمكتبة',
+      campaignName: 'المكتبة مارس 2026',
+      description: 'الإعلان عن وصول كتب جديدة إلى مكتبة المدرسة.',
+      priority: 'low',
+      status: 'sent',
+      audience: { roles: ['student', 'teacher'], grades: [], classes: [], estimatedCount: 650 },
+      channels: ['app-notification'],
+      appNotifConfig: { title: 'كتب جديدة في المكتبة!', message: '15 عنوانًا جديدًا أُضيفت هذا الأسبوع. تعالوا واكتشفوها!', actionLabel: 'تصفّح', actionUrl: '/library' },
       sendNow: true,
       scheduledAt: null,
       sentAt: daysAgo(5),

@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Bell } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Bell, Globe, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Notification, ComposeFormState } from '@/types/notification';
 import { INITIAL_COMPOSE_STATE } from '@/types/notification';
@@ -8,9 +8,11 @@ import { NotificationHeader } from '@/components/dashboard/NotificationHeader';
 import { NotificationTable } from '@/components/dashboard/NotificationTable';
 import { ComposeDrawer } from '@/components/compose/ComposeDrawer';
 import { NotificationDetailModal } from '@/components/detail/NotificationDetailModal';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const NotificationCenterPage: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>(() => loadNotifications());
+  const { t, locale, setLocale } = useLanguage();
+  const [notifications, setNotifications] = useState<Notification[]>(() => loadNotifications(locale));
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [editDraft, setEditDraft] = useState<ComposeFormState | null>(null);
@@ -59,7 +61,7 @@ const NotificationCenterPage: React.FC = () => {
     const now = new Date().toISOString();
     const notification: Notification = {
       id: generateId(),
-      title: form.title || 'Untitled Draft',
+      title: form.title || t('common.untitledDraft'),
       campaignName: form.campaignName,
       description: form.description,
       priority: form.priority,
@@ -110,6 +112,12 @@ const NotificationCenterPage: React.FC = () => {
     setIsComposeOpen(true);
   }, [handleDelete]);
 
+  useEffect(() => {
+    setNotifications(loadNotifications(locale));
+  }, [locale]);
+
+  const toggleLocale = () => setLocale(locale === 'en' ? 'ar' : 'en');
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shrink-0">
@@ -122,9 +130,21 @@ const NotificationCenterPage: React.FC = () => {
             <Bell className="w-6 h-6 text-amber-400" />
           </motion.div>
           <div>
-            <h1 className="text-lg font-bold leading-tight">Notification Center</h1>
-            <p className="text-xs text-slate-400">Centralized school communication hub</p>
+            <h1 className="text-lg font-bold leading-tight">{t('header.title')}</h1>
+            <p className="text-xs text-slate-400">{t('header.subtitle')}</p>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleLocale}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+          >
+            <Globe className="w-4 h-4" />
+            {locale === 'en' ? 'العربية' : 'English'}
+          </button>
+          <button className="flex items-center justify-center w-9 h-9 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg transition-all" title="Settings">
+            <Settings className="w-4 h-4" />
+          </button>
         </div>
       </header>
 

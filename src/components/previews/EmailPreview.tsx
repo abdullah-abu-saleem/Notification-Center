@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { EmailConfig } from '@/types/notification';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   config: EmailConfig;
@@ -7,6 +8,9 @@ interface Props {
 }
 
 export const EmailPreview: React.FC<Props> = ({ config, title }) => {
+  const { t } = useLanguage();
+  const [imgLoaded, setImgLoaded] = useState(false);
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
@@ -18,31 +22,41 @@ export const EmailPreview: React.FC<Props> = ({ config, title }) => {
           </div>
           <div className="space-y-1">
             <p className="text-[10px] text-slate-400">
-              <span className="font-bold">From:</span> Al-Khadr Modern Schools &lt;no-reply@alkhadr.edu&gt;
+              <span className="font-bold">{t('emailPreview.from')}</span> {t('emailPreview.sender')}
             </p>
             <p className="text-[10px] text-slate-400">
-              <span className="font-bold">Subject:</span>{' '}
-              <span className="text-slate-700 font-medium">{config.subject || 'No subject'}</span>
+              <span className="font-bold">{t('emailPreview.subject')}</span>{' '}
+              <span className="text-slate-700 font-medium">{config.subject || t('emailPreview.noSubject')}</span>
             </p>
           </div>
         </div>
 
         <div className="p-5">
           <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl px-5 py-4 mb-5 text-center">
-            <p className="text-white font-bold text-sm">Al-Khadr Modern Schools</p>
-            <p className="text-slate-300 text-[10px] mt-0.5">Notification Center</p>
+            <p className="text-white font-bold text-sm">{t('emailPreview.schoolName')}</p>
+            <p className="text-slate-300 text-[10px] mt-0.5">{t('emailPreview.notificationCenter')}</p>
           </div>
 
           {config.imageUrl && (
-            <div className="bg-slate-100 rounded-xl h-32 mb-4 flex items-center justify-center">
-              <p className="text-xs text-slate-400">Banner Image</p>
+            <div className="relative rounded-xl h-32 mb-4 overflow-hidden bg-slate-100">
+              <img
+                src={config.imageUrl}
+                alt={t('emailPreview.bannerImage')}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                onLoad={() => setImgLoaded(true)}
+              />
+              {!imgLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />
+                </div>
+              )}
             </div>
           )}
 
-          <h2 className="text-base font-bold text-slate-800 mb-3">{title || 'Notification Title'}</h2>
+          <h2 className="text-base font-bold text-slate-800 mb-3">{title || t('emailPreview.notifTitle')}</h2>
 
           <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-line mb-5">
-            {config.body || 'Your email content will appear here...'}
+            {config.body || t('emailPreview.bodyPlaceholder')}
           </div>
 
           {config.ctaLabel && (
@@ -56,7 +70,7 @@ export const EmailPreview: React.FC<Props> = ({ config, title }) => {
 
         <div className="bg-slate-50 px-5 py-3 border-t border-slate-100 text-center">
           <p className="text-[10px] text-slate-400">
-            Al-Khadr Modern Schools · Sent via Notification Center
+            {t('emailPreview.footer')}
           </p>
         </div>
       </div>

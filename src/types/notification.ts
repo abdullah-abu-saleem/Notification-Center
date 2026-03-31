@@ -1,5 +1,5 @@
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
-export type NotificationStatus = 'draft' | 'scheduled' | 'sent' | 'expired';
+export type NotificationStatus = 'draft' | 'scheduled' | 'sent' | 'expired' | 'cancelled';
 export type DeliveryChannel = 'email' | 'app-notification' | 'pop-up' | 'sticky-banner';
 export type AudienceRole = 'student' | 'teacher' | 'parent';
 
@@ -8,11 +8,13 @@ export interface AudienceTarget {
   grades: string[];
   classes: string[];
   estimatedCount: number;
+  audienceSummary?: string;
 }
 
 export interface EmailConfig {
   subject: string;
   body: string;
+  /** URL string or base64 data URI (data:image/...) from file upload */
   imageUrl: string;
   ctaLabel: string;
   ctaUrl: string;
@@ -28,6 +30,7 @@ export interface AppNotifConfig {
 export interface PopUpConfig {
   title: string;
   body: string;
+  /** URL string or base64 data URI (data:image/...) from file upload */
   imageUrl: string;
   primaryLabel: string;
   primaryUrl: string;
@@ -69,6 +72,9 @@ export interface Notification {
   expiresAt: string | null;
   createdAt: string;
   stats: NotificationStats;
+  channelStats?: any;
+  formConfig?: boolean;
+  formStats?: { totalResponses: number };
 }
 
 export interface ComposeFormState {
@@ -151,25 +157,26 @@ export function composeReducer(state: ComposeFormState, action: ComposeAction): 
   }
 }
 
-export const CHANNEL_LABELS: Record<DeliveryChannel, { label: string; icon: string; description: string }> = {
-  'email': { label: 'Email', icon: 'Mail', description: 'Branded email to registered addresses' },
-  'app-notification': { label: 'App Notification', icon: 'Bell', description: 'In-app bell notification' },
-  'pop-up': { label: 'Platform Pop-Up', icon: 'MessageSquare', description: 'Modal shown on next login' },
-  'sticky-banner': { label: 'Sticky Banner', icon: 'Flag', description: 'Persistent bar below navigation' },
+export const CHANNEL_LABELS: Record<DeliveryChannel, { labelKey: string; icon: string; descKey: string }> = {
+  'email': { labelKey: 'channelLabels.email', icon: 'Mail', descKey: 'channelLabels.emailDesc' },
+  'app-notification': { labelKey: 'channelLabels.appNotification', icon: 'Bell', descKey: 'channelLabels.appNotificationDesc' },
+  'pop-up': { labelKey: 'channelLabels.popUp', icon: 'MessageSquare', descKey: 'channelLabels.popUpDesc' },
+  'sticky-banner': { labelKey: 'channelLabels.stickyBanner', icon: 'Flag', descKey: 'channelLabels.stickyBannerDesc' },
 };
 
-export const PRIORITY_CONFIG: Record<NotificationPriority, { label: string; color: string; bgColor: string; borderColor: string }> = {
-  low: { label: 'Low', color: 'text-slate-600', bgColor: 'bg-slate-50', borderColor: 'border-slate-200' },
-  normal: { label: 'Normal', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' },
-  high: { label: 'High', color: 'text-amber-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-200' },
-  urgent: { label: 'Urgent', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' },
+export const PRIORITY_CONFIG: Record<NotificationPriority, { labelKey: string; color: string; bgColor: string; borderColor: string }> = {
+  low: { labelKey: 'priority.low', color: 'text-slate-600', bgColor: 'bg-slate-50', borderColor: 'border-slate-200' },
+  normal: { labelKey: 'priority.normal', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' },
+  high: { labelKey: 'priority.high', color: 'text-amber-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-200' },
+  urgent: { labelKey: 'priority.urgent', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' },
 };
 
-export const STATUS_CONFIG: Record<NotificationStatus, { label: string; color: string; bgColor: string }> = {
-  draft: { label: 'Draft', color: 'text-slate-600', bgColor: 'bg-slate-100' },
-  scheduled: { label: 'Scheduled', color: 'text-blue-700', bgColor: 'bg-blue-50' },
-  sent: { label: 'Sent', color: 'text-emerald-700', bgColor: 'bg-emerald-50' },
-  expired: { label: 'Expired', color: 'text-red-600', bgColor: 'bg-red-50' },
+export const STATUS_CONFIG: Record<NotificationStatus, { labelKey: string; color: string; bgColor: string }> = {
+  sent: { labelKey: 'status.sent', color: 'text-emerald-700', bgColor: 'bg-emerald-100/50' },
+  draft: { labelKey: 'status.draft', color: 'text-slate-600', bgColor: 'bg-slate-100' },
+  scheduled: { labelKey: 'status.scheduled', color: 'text-blue-700', bgColor: 'bg-blue-100/50' },
+  expired: { labelKey: 'status.expired', color: 'text-orange-700', bgColor: 'bg-orange-100/50' },
+  cancelled: { labelKey: 'status.cancelled', color: 'text-red-700', bgColor: 'bg-red-100/50' },
 };
 
 export const ALL_GRADES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];

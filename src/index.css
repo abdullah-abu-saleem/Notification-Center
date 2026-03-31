@@ -27,3 +27,9 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.drag-over {
+  outline: 2px dashed #6366f1;
+  outline-offset: -2px;
+  background: rgba(99, 102, 241, 0.04);
+}
